@@ -120,7 +120,7 @@ def more_product( **kwargs ):
 						"price": details.find("div", {"class": "new-price"}).text.encode('utf-8').strip()
 					}	
 				}
-				print data
+				# print data
 
 	return
 
@@ -153,13 +153,40 @@ for category in soup.findAll("a", {"class": "cat-name"})[1:2]:
 					}
 				}
 
-			col.update(
-				{"category":category.text.encode('utf-8').strip()},
-				{"$push": { "product_details" :{ 
-				"image_source" : details.find("img", {"class": "prod_img"})['src'].encode('utf-8').strip(),
-				"name": details.find("div", {"class": "prName"}).text.encode('utf-8').strip(),
-				"quantity" : details.find("span", {"class": "sku_weight"}).text.encode('utf-8').strip(),
-				"price" : details.find("div", {"class": "new-price"}).text.encode('utf-8').strip() } } } )
+			# print data
+			if col.find({"'category': category.text.encode('utf-8').strip()":{"$exists" : True}}):
+				if col.find({"'product_category': sub_cat.text.encode('utf-8').strip()":{"$exits" : True}}):
+					col.update(
+						{"category": category.text.encode('utf-8').strip()},
+						{
+						"$push": {
+						"product_details" :{ 
+						"image_source" : details.find("img", {"class": "prod_img"})['src'].encode('utf-8').strip(),
+						"name": details.find("div", {"class": "prName"}).text.encode('utf-8').strip(),
+						"quantity" : details.find("span", {"class": "sku_weight"}).text.encode('utf-8').strip(),
+						"price" : details.find("div", {"class": "new-price"}).text.encode('utf-8').strip() } } } )
+				else:
+					col.insert(
+					{"category":category.text.encode('utf-8').strip(),
+					"product_category": sub_cat.text.encode('utf-8').strip(),
+					"product_details":[
+						{"image_source":details.find("img", {"class": "prod_img"})['src'].encode('utf-8').strip(),
+						"name":details.find("div", {"class": "prName"}).text.encode('utf-8').strip(),
+						"quantity":details.find("span", {"class": "sku_weight"}).text.encode('utf-8').strip(),
+						"price": details.find("div", {"class": "new-price"}).text.encode('utf-8').strip()
+						}]}
+					)
+			else:
+				col.insert(
+					{"category":category.text.encode('utf-8').strip(),
+					"product_category": sub_cat.text.encode('utf-8').strip(),
+					"product_details":[
+						{"image_source":details.find("img", {"class": "prod_img"})['src'].encode('utf-8').strip(),
+						"name":details.find("div", {"class": "prName"}).text.encode('utf-8').strip(),
+						"quantity":details.find("span", {"class": "sku_weight"}).text.encode('utf-8').strip(),
+						"price": details.find("div", {"class": "new-price"}).text.encode('utf-8').strip()
+						}]}
+					)
 
 		total_display_items_per_request = int(re.search( r'\d+', sub_cat_details.find("h2").text.strip().encode("utf-8") ).group())
 		print total_display_items_per_request
