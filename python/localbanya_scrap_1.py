@@ -11,7 +11,9 @@ base_url = "http://www.localbanya.com"
 
 #mongodb connection
 client = MongoClient()
+#'banya_scrap' is db name
 db = client['banya_scrap']
+#'banyacoll' is collection name
 col = db['banyacoll']
 
 # categories
@@ -124,8 +126,8 @@ def more_product( **kwargs ):
 
 	return
 
-for category in soup.findAll("a", {"class": "cat-name"})[1:2]:
-	for sub_cat in soup.findAll("a", {"class": "sub_cat"})[6:7]:
+for category in soup.findAll("a", {"class": "cat-name"}):
+	for sub_cat in soup.findAll("a", {"class": "sub_cat"}):
 		encoded_url=urllib.quote_plus(sub_cat['href'])
 		last_activity = time.time()-60 
 		current_time = time.time()
@@ -154,6 +156,7 @@ for category in soup.findAll("a", {"class": "cat-name"})[1:2]:
 				}
 
 			# print data
+
 			if col.find({"'category': category.text.encode('utf-8').strip()":{"$exists" : True}}):
 				if col.find({"'product_category': sub_cat.text.encode('utf-8').strip()":{"$exits" : True}}):
 					col.update(
@@ -166,6 +169,7 @@ for category in soup.findAll("a", {"class": "cat-name"})[1:2]:
 						"quantity" : details.find("span", {"class": "sku_weight"}).text.encode('utf-8').strip(),
 						"price" : details.find("div", {"class": "new-price"}).text.encode('utf-8').strip() } } } )
 				else:
+					#insert new document with same 'category' name but different 'product-category' name
 					col.insert(
 					{"category":category.text.encode('utf-8').strip(),
 					"product_category": sub_cat.text.encode('utf-8').strip(),
@@ -177,6 +181,7 @@ for category in soup.findAll("a", {"class": "cat-name"})[1:2]:
 						}]}
 					)
 			else:
+				#insert new document with new 'category' name and 'product-category' name
 				col.insert(
 					{"category":category.text.encode('utf-8').strip(),
 					"product_category": sub_cat.text.encode('utf-8').strip(),
